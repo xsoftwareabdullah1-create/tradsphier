@@ -1,0 +1,10 @@
+const router = require('express').Router();
+const auth = require('../middleware/auth');
+const Portfolio = require('../models/Portfolio');
+const LedgerEntry = require('../models/LedgerEntry');
+const AuditEvent = require('../models/AuditEvent');
+const { getOrCreatePortfolio } = require('../services/ledgerService');
+router.get('/', auth, async (req,res) => { try { const p = await getOrCreatePortfolio(req.userId); res.json({ portfolio:p }); } catch(e) { res.status(500).json({message:e.message}); } });
+router.get('/transactions', auth, async (req,res) => { const rows = await LedgerEntry.find({userId:req.userId}).sort({createdAt:-1}).limit(200).lean(); res.json({transactions:rows}); });
+router.get('/audit', auth, async (req,res) => { const rows = await AuditEvent.find({userId:req.userId}).sort({createdAt:-1}).limit(200).lean(); res.json({events:rows}); });
+module.exports = router;

@@ -1,0 +1,1 @@
+const r=require('express').Router();const a=require('../middleware/auth');const c=require('../controllers/orderController');r.use(a);r.get('/',c.list);r.post('/',c.create);r.post('/:id/cancel',c.cancel);module.exports=r;
