@@ -1,0 +1,2 @@
+const jwt=require('jsonwebtoken');
+module.exports=(req,res,next)=>{try{const h=req.headers.authorization||'';const token=h.startsWith('Bearer ')?h.slice(7):null;if(!token)return res.status(401).json({message:'Authentication required'});const p=jwt.verify(token,process.env.JWT_SECRET);req.userId=p.sub;req.user={id:p.sub};next();}catch(e){return res.status(401).json({message:'Invalid or expired token'});}};
