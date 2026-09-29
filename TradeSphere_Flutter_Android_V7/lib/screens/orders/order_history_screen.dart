@@ -1,0 +1,11 @@
+import 'package:flutter/material.dart';
+import '../../services/orders_api.dart';
+import '../../services/api_client.dart';
+
+class OrderHistoryScreen extends StatefulWidget { const OrderHistoryScreen({super.key}); @override State<OrderHistoryScreen> createState()=>_OrderHistoryScreenState(); }
+class _OrderHistoryScreenState extends State<OrderHistoryScreen>{ final api=OrdersApi(); List<Map<String,dynamic>> orders=[]; bool loading=true;
+ @override void initState(){super.initState();load();}
+ Future<void> load() async {try{orders=await api.list();}catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(e is ApiException?e.message:e.toString())));}finally{if(mounted)setState(()=>loading=false);}}
+ Future<void> cancel(String id) async {final ok=await showDialog<bool>(context:context,builder:(_)=>AlertDialog(title:const Text('Cancel order?'),content:const Text('This cancellation will be validated by the server.'),actions:[TextButton(onPressed:()=>Navigator.pop(context,false),child:const Text('Keep')),FilledButton(onPressed:()=>Navigator.pop(context,true),child:const Text('Cancel order'))]));if(ok!=true)return;try{await api.cancel(id);await load();}catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(e is ApiException?e.message:e.toString())));}}
+ @override Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:const Text('Order history'),actions:[IconButton(onPressed:load,icon:const Icon(Icons.refresh))]),body:loading?const Center(child:CircularProgressIndicator()):orders.isEmpty?const Center(child:Text('No orders yet.')):ListView.builder(padding:const EdgeInsets.all(14),itemCount:orders.length,itemBuilder:(_,i){final o=orders[i];final status=(o['status']??'').toString();return Card(child:ListTile(title:Text('${o['side']} ${o['symbol']}'),subtitle:Text('${o['quantity']} @ ${o['price']}\n${o['id']}'),isThreeLine:true,trailing:Column(mainAxisAlignment:MainAxisAlignment.center,children:[Text(status.toUpperCase()),if(status=='open')TextButton(onPressed:()=>cancel(o['id'].toString()),child:const Text('Cancel'))]));})); }
+}
